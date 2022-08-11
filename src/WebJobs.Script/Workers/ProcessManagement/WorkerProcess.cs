@@ -75,6 +75,7 @@ namespace Microsoft.Azure.WebJobs.Script.Workers
                     _workerProcessLogger?.LogDebug($"Starting worker process with FileName:{Process.StartInfo.FileName} WorkingDirectory:{Process.StartInfo.WorkingDirectory} Arguments:{Process.StartInfo.Arguments}");
                     Process.Start();
                     _workerProcessLogger?.LogDebug($"{Process.StartInfo.FileName} process with Id={Process.Id} started");
+                    Console.WriteLine($"process id: {Process.Id}");
 
                     Process.BeginErrorReadLine();
                     Process.BeginOutputReadLine();
