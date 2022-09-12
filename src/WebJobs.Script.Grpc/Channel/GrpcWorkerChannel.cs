@@ -717,6 +717,12 @@ namespace Microsoft.Azure.WebJobs.Script.Grpc
                         Name = metadata.Name
                     };
 
+                    foreach (var property in metadata.Properties)
+                    {
+                        var prefixedKey = "worker." + property.Key;
+                        functionMetadata.Properties.Add(prefixedKey, property.Value);
+                    }
+
                     functionMetadata.SetFunctionId(metadata.FunctionId);
 
                     var bindings = new List<string>();
