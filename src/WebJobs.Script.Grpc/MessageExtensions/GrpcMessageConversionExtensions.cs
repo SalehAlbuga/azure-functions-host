@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -66,18 +67,18 @@ namespace Microsoft.Azure.WebJobs.Script.Grpc
 
         internal static TypedData ToBindingData(this ParameterBindingData data, ILogger logger)
         {
-            var typedData = new TypedData();
-            var bindingData = new BindingData();
-
-            foreach (var pair in data.Properties)
+            var bindingData = new BindingData
             {
-                if (pair.Value != null)
-                {
-                    bindingData.Properties.Add(pair.Key, pair.Value.ToString());
-                }
-            }
+                Version = data.Version,
+                ContentType = data.ContentType,
+                Content = (Any)data.Content
+            };
 
-            typedData.BindingData = bindingData;
+            var typedData = new TypedData
+            {
+                BindingData = bindingData
+            };
+
             return typedData;
         }
 
