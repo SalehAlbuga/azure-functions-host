@@ -71,7 +71,8 @@ namespace Microsoft.Azure.WebJobs.Script.Grpc
             {
                 Version = data.Version,
                 ContentType = data.ContentType,
-                Content = (Any)data.Content
+                Source = data.Source,
+                Content = JsonConvert.SerializeObject(data.Content)
             };
 
             var typedData = new TypedData
