@@ -1,0 +1,72 @@
+variables:
+- group: 'Functions Host V1 Testing'
+- name: build_number
+  value: $[ counter('constant', 131400) ]
+- name: includeBuildNumberInVersion
+  value: 1
+- name: removeprefix_DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+  value: true
+
+pr:
+  branches:
+    include:
+    - v1.x
+    - release/1.*
+
+trigger:
+  branches:
+    include:
+    - v1.x
+    - release/1.*
+
+jobs:
+- job: BuildAndTest
+  pool:
+    name: '1ES-Hosted-AzFunc'
+    demands:
+      - ImageOverride -equals MMS2019TLS
+
+  steps:
+  - task: 1ESHostedPoolValidation@1
+
+  - pwsh: |
+      $env:Path = "C:\Program Files (x86)\Microsoft SDKs\F#\4.0\Framework\v4.0;" + $env:Path;
+    displayName: "Add tools to PATH"
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '6.11.2'
+
+  - task: MsBuild@1
+    inputs:
+      solution: 'WebJobs.Script.proj'
+      msbuildArguments: '/target:EnableSkipStrongNames;PackageScriptHost;PackageWebHost;TestBuild /property:Buildnumber=$(build_number);Configuration=Release'
+      logFileVerbosity: minimal
+
+  - task: ManifestGeneratorTask@0
+    displayName: "SBOM Generation"
+    inputs:
+      BuildDropPath: '$(System.DefaultWorkingDirectory)/packages'
+      Verbosity: 'Information'
+
+  - pwsh: .\runtests.ps1
+    displayName: "Run tests"
+    env:
+      AzureWebJobsStorage: $(Storage)
+      AzureWebJobsDashboard: $(Storage)
+      AzureWebJobsServiceBus: $(ServiceBus)
+      AzureWebJobsDocumentDBConnectionString: $(CosmosDB)
+      AzureWebJobsMobileAppUri: $(MobileUri)
+      AzureWebJobs_TestMobileUri: $(MobileUri)
+      AzureWebJobsDropBox: 'UseLocalFileSystem=true;Path=%TEMP%\DropBox'
+      AzureWebJobsEventHubSender: $(EventHub)
+      AzureWebJobsEventHubReceiver: $(EventHub)
+      AzureWebJobsEventHubPath: 'testhub'
+      AzureWebJobsEnv: 'Development'
+      FILES_ACCOUNT_NAME: $(FilesAccountName)
+      FILES_ACCOUNT_KEY: $(FilesAccountKey)
+      AzureWebJobsScriptRoot: 'test\WebJobs.Script.Tests.Integration\TestScripts\Empty'
+      AzureWebJobsCosmosDBConnectionString: $(CosmosDB)
+
+  - publish: '$(System.DefaultWorkingDirectory)/packages'
+    artifact: drop
