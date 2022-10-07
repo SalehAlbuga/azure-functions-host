@@ -510,7 +510,7 @@ message BindingInfo {
       string = 1;
       binary = 2;
       stream = 3;
-      reference = 4;
+      bindingData = 4;
     }
 
   // Type of binding (e.g. HttpTrigger)
@@ -655,5 +655,5 @@ message BindingData
     string Version = 1;
     string Source = 2;
     string ContentType = 3;
-    string Content = 4;
+    bytes Content = 4;
 }

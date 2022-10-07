@@ -222,10 +222,9 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
             context.Value = str;
         }
 
-        internal static async Task BindParameterBindingData(BindingContext context)
+        internal static Task BindParameterBindingData(BindingContext context)
         {
-            var parameterBindingData = await context.Binder.BindAsync<ParameterBindingData>(context.Attributes);
-            context.Value = parameterBindingData;
+            return context.Binder.BindAsync<ParameterBindingData>(context.Attributes);
         }
 
         internal static async Task BindStreamAsync(BindingContext context, FileAccess access)

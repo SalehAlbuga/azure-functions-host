@@ -72,7 +72,7 @@ namespace Microsoft.Azure.WebJobs.Script.Grpc
                 Version = data.Version,
                 ContentType = data.ContentType,
                 Source = data.Source,
-                Content = data.Content.ToString()
+                Content = ByteString.CopyFrom(data.Content)
             };
 
             var typedData = new TypedData
