@@ -62,6 +62,8 @@ jobs:
       AzureWebJobsEventHubSender: $(EventHub)
       AzureWebJobsEventHubReceiver: $(EventHub)
       AzureWebJobsEventHubPath: 'testhub'
+      AzureWebJobsNotificationHubsConnectionString: $(NotificationHub)
+      AzureWebJobsNotificationHubName: 'testhub'
       AzureWebJobsEnv: 'Development'
       FILES_ACCOUNT_NAME: $(FilesAccountName)
       FILES_ACCOUNT_KEY: $(FilesAccountKey)
