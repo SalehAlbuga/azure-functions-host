@@ -386,5 +386,30 @@ namespace Microsoft.Azure.WebJobs.Script.Tests.Workers
                 Assert.Contains(_loggerProvider.GetAllLogMessages().Select(x => x.FormattedMessage), x => x.StartsWith("Starting new language worker canceled:"));
             }
         }
+
+        [Theory]
+        [InlineData(4, new bool[] { true, true, true }, true)]
+        [InlineData(3, new bool[] { true, true, true }, false)]
+        [InlineData(4, new bool[] { true, false, true }, false)]
+        public void CanScale_ReturnsExpected(int maxWorkerCount, bool[] isReadyArray, bool result)
+        {
+            TestEnvironment testEnvironment = new TestEnvironment();
+            Mock<IFunctionInvocationDispatcherFactory> functionInvocationDispatcherFactory = new Mock<IFunctionInvocationDispatcherFactory>(MockBehavior.Strict);
+            Mock<IFunctionsHostingConfiguration> conf = new Mock<IFunctionsHostingConfiguration>();
+            WorkerConcurrencyOptions options = new WorkerConcurrencyOptions();
+            options.MaxWorkerCount = maxWorkerCount;
+
+            WorkerConcurrencyManager concurrancyManager = new WorkerConcurrencyManager(functionInvocationDispatcherFactory.Object, testEnvironment,
+                Options.Create(options), conf.Object, _applicationLifetime, _loggerFactory);
+
+            List<IRpcWorkerChannel> workerChannels = new List<IRpcWorkerChannel>();
+            foreach (bool isReady in isReadyArray)
+            {
+                Mock<IRpcWorkerChannel> mock = new Mock<IRpcWorkerChannel>();
+                mock.Setup(x => x.IsChannelReadyForInvocations()).Returns(isReady);
+                workerChannels.Add(mock.Object);
+            }
+            Assert.Equal(concurrancyManager.CanScale(workerChannels), result);
+        }
     }
 }

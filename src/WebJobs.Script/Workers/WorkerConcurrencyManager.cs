@@ -131,10 +131,9 @@ namespace Microsoft.Azure.WebJobs.Script.Workers
                 {
                     if (_functionInvocationDispatcher is RpcFunctionInvocationDispatcher rpcDispatcher)
                     {
-                        // Check memory
-                        var currentChannels = (await rpcDispatcher.GetAllWorkerChannelsAsync()).Select(x => x.WorkerProcess.Process.PrivateMemorySize64);
-                        if (IsEnoughMemoryToScale(Process.GetCurrentProcess().PrivateMemorySize64,
-                            currentChannels,
+                        var allWorkerChannels = await rpcDispatcher.GetAllWorkerChannelsAsync();
+                        if (CanScale(allWorkerChannels) && IsEnoughMemoryToScale(Process.GetCurrentProcess().PrivateMemorySize64,
+                            allWorkerChannels.Select(x => x.WorkerProcess.Process.PrivateMemorySize64),
                             _memoryLimit))
                         {
                             await _functionInvocationDispatcher.StartWorkerChannel();
@@ -315,6 +314,26 @@ LatencyHistory=({formattedLatencyHistory}), AvgLatency={latencyAvg}, MaxLatency=
                 _logger.LogDebug($"Starting new language worker canceled: TotalMemory={memoryLimit}, MaxWorkerSize={maxWorkerSize}, CurrentMemoryConsumption={currentMemoryConsumption}");
                 return false;
             }
+            return true;
+        }
+
+        internal bool CanScale(IEnumerable<IRpcWorkerChannel> workerChannels)
+        {
+            // Cancel if there is any "non-ready" channel.
+            var nonreadyWorkerChannels = workerChannels.Where(x => x.IsChannelReadyForInvocations() == false);
+            if (nonreadyWorkerChannels.Any())
+            {
+                _logger.LogDebug($"Starting new language worker canceled: TotalChannels={workerChannels.Count()}, NonReadyChannels={nonreadyWorkerChannels.Count()}");
+                return false;
+            }
+
+            // Cancel if MaxWorkerCount is reached.
+            if (workerChannels.Count() >= _workerConcurrencyOptions.Value.MaxWorkerCount)
+            {
+                _logger.LogDebug($"Starting new language worker canceled: TotalChannels={workerChannels.Count()}, MaxWorkerCount={_workerConcurrencyOptions.Value.MaxWorkerCount}");
+                return false;
+            }
+
             return true;
         }
 
