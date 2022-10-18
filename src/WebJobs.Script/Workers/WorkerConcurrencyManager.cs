@@ -175,10 +175,11 @@ namespace Microsoft.Azure.WebJobs.Script.Workers
                     return;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Best effort
                 // return and do not start the activation timmer again
+                _logger.LogError(ex, "Error activating worker concurrency");
                 return;
             }
 
