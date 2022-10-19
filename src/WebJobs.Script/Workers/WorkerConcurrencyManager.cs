@@ -318,6 +318,11 @@ LatencyHistory=({formattedLatencyHistory}), AvgLatency={latencyAvg}, MaxLatency=
             return true;
         }
 
+        /// <summary>
+        /// Checks if a new worker can be added.
+        /// </summary>
+        /// <param name="workerChannels">All current worker chanells.</param>
+        /// <returns>True if a new worker can be started.</returns>
         internal bool CanScale(IEnumerable<IRpcWorkerChannel> workerChannels)
         {
             // Cancel if there is any "non-ready" channel.
@@ -329,9 +334,10 @@ LatencyHistory=({formattedLatencyHistory}), AvgLatency={latencyAvg}, MaxLatency=
             }
 
             // Cancel if MaxWorkerCount is reached.
-            if (workerChannels.Count() >= _workerConcurrencyOptions.Value.MaxWorkerCount)
+            int workersCount = workerChannels.Count();
+            if (workersCount >= _workerConcurrencyOptions.Value.MaxWorkerCount)
             {
-                _logger.LogDebug($"Starting new language worker canceled: TotalChannels={workerChannels.Count()}, MaxWorkerCount={_workerConcurrencyOptions.Value.MaxWorkerCount}");
+                _logger.LogDebug($"Starting new language worker canceled: TotalChannels={workersCount}, MaxWorkerCount={_workerConcurrencyOptions.Value.MaxWorkerCount}");
                 return false;
             }
 
