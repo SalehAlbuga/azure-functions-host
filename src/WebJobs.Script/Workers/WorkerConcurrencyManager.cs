@@ -118,7 +118,7 @@ namespace Microsoft.Azure.WebJobs.Script.Workers
 
         internal async void OnTimer(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (_disposed)
+            if (_environment.IsPlaceholderModeEnabled() || _disposed)
             {
                 return;
             }

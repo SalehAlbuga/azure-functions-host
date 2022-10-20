@@ -411,5 +411,21 @@ namespace Microsoft.Azure.WebJobs.Script.Tests.Workers
             }
             Assert.Equal(concurrancyManager.CanScale(workerChannels), result);
         }
+
+        [Fact]
+        public void OnTimer_WorksAsExpected_IfPlaceholderMode_Enabled()
+        {
+            TestEnvironment testEnvironment = new TestEnvironment();
+            Mock<IFunctionInvocationDispatcherFactory> functionInvocationDispatcherFactory = new Mock<IFunctionInvocationDispatcherFactory>(MockBehavior.Strict);
+            Mock<IFunctionsHostingConfiguration> conf = new Mock<IFunctionsHostingConfiguration>();
+            WorkerConcurrencyOptions options = new WorkerConcurrencyOptions();
+
+            WorkerConcurrencyManager concurrancyManager = new WorkerConcurrencyManager(functionInvocationDispatcherFactory.Object, testEnvironment,
+                Options.Create(options), conf.Object, _applicationLifetime, _loggerFactory);
+
+            testEnvironment.SetEnvironmentVariable(EnvironmentSettingNames.AzureWebsitePlaceholderMode, "1");
+            concurrancyManager.OnTimer(null, null);
+            Assert.Empty(_loggerProvider.GetAllLogMessages().Where(x => x.FormattedMessage == "Error monitoring worker concurrency"));
+        }
     }
 }
